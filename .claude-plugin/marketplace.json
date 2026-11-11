@@ -1,0 +1,5 @@
+{
+  "name": "claude-harness-mods",
+  "owner": { "name": "linnoinen" },
+  "plugins": [{ "name": "git-context", "source": "./git-context", "description": "Band above the prompt showing repo, branch, incoming/outgoing commits and a details panel." }]
+}
