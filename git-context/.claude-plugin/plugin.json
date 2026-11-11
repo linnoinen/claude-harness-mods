@@ -1,0 +1,1 @@
+{ "name": "git-context", "version": "0.1.0", "description": "Above-prompt band showing repo, branch, incoming/outgoing commits, with an expandable details panel.", "types": "./types/index.d.ts" }
