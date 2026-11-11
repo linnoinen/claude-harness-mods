@@ -98,25 +98,49 @@ export const register: Register = on => {
     const { Box, Text, Button } = $.ui.resolve(e)
 
     const dirty = g.staged + g.modified + g.untracked + g.conflicted
+    const accent = g.conflicted > 0 ? 'red' : g.behind > 0 ? 'yellow' : dirty > 0 ? 'yellow' : 'green'
 
-    const Row = (p: { k: string; v: string }) => (
-      <Box key={p.k}>
-        <Text dimColor>{p.k.padEnd(10)}</Text>
-        <Text>{p.v}</Text>
+    const Head = (p: { t: string }) => (
+      <Box key={p.t}>
+        <Text bold color="blue">{p.t}</Text>
       </Box>
     )
+    const Row = (p: { k: string; v: string; color?: string }) => (
+      <Box key={p.k}>
+        <Text dimColor>{'  ' + p.k.padEnd(10)}</Text>
+        <Text color={p.color as any}>{p.v}</Text>
+      </Box>
+    )
+    const num = (n: number, color: string) => ({ v: String(n), color: n > 0 ? color : undefined })
 
     return (
       <Box flexDirection="column">
         <Box>
+          <Text color={accent}>▌ </Text>
           <Text bold>{g.repo}</Text>
-          <Text dimColor> on </Text>
-          <Text bold color="cyan">{g.branch}</Text>
           <Text>  </Text>
-          <Text color={g.behind > 0 ? 'yellow' : undefined} dimColor={g.behind === 0}>↓{g.behind} in</Text>
+          <Text backgroundColor="cyan" color="black" bold> ⎇ {g.branch} </Text>
           <Text>  </Text>
-          <Text color={g.ahead > 0 ? 'green' : undefined} dimColor={g.ahead === 0}>↑{g.ahead} out</Text>
-          <Text dimColor>{dirty > 0 ? `  ● ${dirty} changed` : '  ✓ clean'} </Text>
+          {g.behind > 0 ? (
+            <Text backgroundColor="yellow" color="black" bold> ↓{g.behind} in </Text>
+          ) : (
+            <Text dimColor>↓0 in</Text>
+          )}
+          <Text>  </Text>
+          {g.ahead > 0 ? (
+            <Text backgroundColor="green" color="black" bold> ↑{g.ahead} out </Text>
+          ) : (
+            <Text dimColor>↑0 out</Text>
+          )}
+          <Text>  </Text>
+          {g.conflicted > 0 ? (
+            <Text backgroundColor="red" color="white" bold> ✖ {g.conflicted} conflicts </Text>
+          ) : dirty > 0 ? (
+            <Text color="yellow">● {dirty} changed</Text>
+          ) : (
+            <Text color="green">✓ clean</Text>
+          )}
+          <Text> </Text>
           <Button
             key="toggle"
             label={open ? 'Hide details' : 'Details'}
@@ -124,20 +148,26 @@ export const register: Register = on => {
           />
         </Box>
         {open ? (
-          <Box flexDirection="column" borderStyle="round" paddingX={1}>
-            <Row k="Repo" v={g.root} />
-            <Row k="Branch" v={g.branch} />
-            <Row k="Upstream" v={g.upstream ?? 'none (no tracking branch)'} />
-            <Row k="Incoming" v={`${g.behind} commit(s) to pull`} />
-            <Row k="Outgoing" v={`${g.ahead} commit(s) to push`} />
-            <Row k="Staged" v={String(g.staged)} />
-            <Row k="Modified" v={String(g.modified)} />
-            <Row k="Untracked" v={String(g.untracked)} />
-            <Row k="Conflicts" v={String(g.conflicted)} />
-            <Row k="Stashes" v={String(g.stashes)} />
-            <Row k="Last" v={g.lastCommit} />
-            <Row k="Remote" v={g.remote} />
-            <Row k="Cwd" v={g.cwd} />
+          <Box flexDirection="column" borderStyle="round" borderColor={accent} paddingX={1}>
+            <Box>
+              <Text bold color="cyan">⎇ {g.branch}</Text>
+              <Text dimColor>  {g.repo}</Text>
+            </Box>
+            <Head t="SYNC" />
+            <Row k="upstream" v={g.upstream ?? 'none (no tracking branch)'} color={g.upstream ? undefined : 'red'} />
+            <Row k="↓ incoming" v={`${g.behind} to pull`} color={g.behind > 0 ? 'yellow' : undefined} />
+            <Row k="↑ outgoing" v={`${g.ahead} to push`} color={g.ahead > 0 ? 'green' : undefined} />
+            <Head t="WORKTREE" />
+            <Row k="● staged" {...num(g.staged, 'green')} />
+            <Row k="● modified" {...num(g.modified, 'yellow')} />
+            <Row k="? new" {...num(g.untracked, 'magenta')} />
+            <Row k="✖ conflicts" {...num(g.conflicted, 'red')} />
+            <Row k="⚑ stashes" {...num(g.stashes, 'cyan')} />
+            <Head t="CONTEXT" />
+            <Row k="HEAD" v={g.lastCommit} />
+            <Row k="ORIGIN" v={g.remote} />
+            <Row k="ROOT" v={g.root} />
+            <Row k="CWD" v={g.cwd} />
           </Box>
         ) : null}
       </Box>
