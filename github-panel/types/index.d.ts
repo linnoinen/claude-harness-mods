@@ -41,6 +41,8 @@ declare module 'claude-code' {
       selected: number | null
       prRuns: Shaped<Run[]>
       repos: Shaped<string[]>
+      confirmMerge: number | null
+      merging: number | null
     }
   }
 }

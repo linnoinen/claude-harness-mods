@@ -4,6 +4,7 @@ A side panel for GitHub, built on the `gh` CLI (install it and run `gh auth logi
 
 - **Actions tab:** workflow runs with status, duration and age, for this directory's repo or any project you pick (dropdown, or type `owner/name`).
 - **Pull requests tab:** open PRs with check and review state. Click a PR to see the runs on its branch.
+- **Merge:** `⤵ Merge` on a non-draft PR shows the check and review state and asks you to pick Squash, Merge or Rebase (or Cancel). While checks are pending or failing it also offers *Auto-squash when green* (`gh pr merge --auto`). The repo's branch protection and allowed methods still apply; a refusal shows as a toast.
 - **Browser:** `↗` on a PR or run opens it on GitHub.
 - **Watch:** `👁 Watch` on a PR, `/gh-watch 12 [owner/repo]`, or Claude's `watch_pr` tool. Claude is prompted when checks finish, the review decision changes, or the PR is merged or closed, and is asked to look at failing logs.
 
