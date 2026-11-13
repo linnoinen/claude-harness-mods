@@ -17,6 +17,8 @@ const selected = atom({ plugin: 'github-panel', key: 'selected' } as const, null
 const prRuns = atom({ plugin: 'github-panel', key: 'prRuns' } as const, [], { shape: 'prruns-1' })
 const watched = atom({ plugin: 'github-panel', key: 'watched' } as const, [], { shape: 'watched-1' })
 const allBranches = atom({ plugin: 'github-panel', key: 'allBranches' } as const, false)
+const confirmMerge = atom({ plugin: 'github-panel', key: 'confirmMerge' } as const, null)
+const merging = atom({ plugin: 'github-panel', key: 'merging' } as const, null)
 
 async function run($: any, cwd: string, cmd: string[]) {
   try {
@@ -166,6 +168,31 @@ async function openUrl($: any, url: string) {
     if (r.ok) return
   }
   await $.ui.toast('Could not open the browser: ' + url)
+}
+
+type MergeMethod = 'squash' | 'merge' | 'rebase'
+
+async function mergePr($: any, num: number, method: MergeMethod, auto: boolean) {
+  if ((await read($, merging)) !== null) return
+  await update($, confirmMerge, () => null)
+  await update($, merging, () => num)
+  try {
+    const cwd: string = await $.session.cwd()
+    const chosen = await read($, project)
+    const r = await run($, cwd, [
+      'gh', 'pr', 'merge', String(num), '--' + method, ...(auto ? ['--auto'] : []),
+      ...(chosen ? ['-R', chosen] : []),
+    ])
+    if (r.ok) {
+      await $.ui.toast(auto ? `PR #${num}: auto-merge (${method}) enabled` : `PR #${num} merged (${method})`)
+      if (!auto) await update($, selected, s => (s === num ? null : s))
+    } else {
+      await $.ui.toast(`Merge of PR #${num} failed: ` + (r.out.split('\n')[0] || 'gh failed').slice(0, 140))
+    }
+  } finally {
+    await update($, merging, () => null)
+    refresh($)
+  }
 }
 
 async function toggle($: any, num: number) {
@@ -383,6 +410,8 @@ export const register: Register = on => {
     const rp = await read($, repo)
     const br = await read($, branch)
     const all = await read($, allBranches)
+    const confirming = await read($, confirmMerge)
+    const mergingNum = await read($, merging)
     // stay well inside the pane: a Button that outgrows its row wraps and tears its brackets apart
     const cols = Math.min(e.viewport?.columns ?? 48, 56)
     const rows = Math.max(1, Math.floor(((e.viewport?.rows ?? 30) - 6) / 3))
@@ -439,7 +468,30 @@ export const register: Register = on => {
                 <Button key={'open-' + p.number} label="↗ Open" onPress={() => openUrl($, p.url)} />
                 <Text> </Text>
                 <Button key={'watch-' + p.number} label={isWatched(p.number) ? '👁 Watching' : '👁 Watch'} onPress={() => togglePrWatch($, p.number)} />
+                {p.draft ? null : <Text> </Text>}
+                {p.draft ? null : mergingNum === p.number
+                  ? <Text color="yellow">◐ merging…</Text>
+                  : <Button key={'merge-' + p.number} label={confirming === p.number ? '⤵ Merge ▾' : '⤵ Merge'} onPress={() => update($, confirmMerge, v => (v === p.number ? null : p.number))} />}
               </Box>
+              {confirming === p.number && mergingNum !== p.number ? (
+                <Box flexDirection="column" paddingLeft={2}>
+                  <Text color={p.checks === 'passing' || p.checks === 'none' ? 'yellow' : 'red'}>
+                    {'Merge #' + p.number + '? checks ' + p.checks + ', ' + (p.review ? p.review.toLowerCase().replace('_', ' ') : 'no review')}
+                  </Text>
+                  <Box>
+                    <Button key={'merge-squash-' + p.number} variant="primary" label="Squash" onPress={() => mergePr($, p.number, 'squash', false)} />
+                    <Text> </Text>
+                    <Button key={'merge-commit-' + p.number} label="Merge" onPress={() => mergePr($, p.number, 'merge', false)} />
+                    <Text> </Text>
+                    <Button key={'merge-rebase-' + p.number} label="Rebase" onPress={() => mergePr($, p.number, 'rebase', false)} />
+                  </Box>
+                  <Box>
+                    {p.checks === 'pending' || p.checks === 'failing' ? <Button key={'merge-auto-' + p.number} label="Auto-squash when green" onPress={() => mergePr($, p.number, 'squash', true)} /> : null}
+                    {p.checks === 'pending' || p.checks === 'failing' ? <Text> </Text> : null}
+                    <Button key={'merge-cancel-' + p.number} dimColor label="Cancel" onPress={() => update($, confirmMerge, () => null)} />
+                  </Box>
+                </Box>
+              ) : null}
               {sel === p.number ? (
                 <Box flexDirection="column" paddingLeft={2}>
                   <Text bold color="blue">ACTIONS FOR ⎇ {clip(p.branch, cols - 20)}</Text>

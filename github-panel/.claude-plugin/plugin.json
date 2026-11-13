@@ -1,1 +1,1 @@
-{ "name": "github-panel", "version": "0.1.0", "description": "Side panel for GitHub Actions runs and pull requests, with browser links and PR watching that prompts Claude when checks, review or state change.", "types": "./types/index.d.ts" }
+{ "name": "github-panel", "version": "0.2.0", "description": "Side panel for GitHub Actions runs and pull requests, with browser links, merging and PR watching that prompts Claude when checks, review or state change.", "types": "./types/index.d.ts" }
