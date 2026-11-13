@@ -1,5 +1,18 @@
 {
   "name": "claude-harness-mods",
-  "owner": { "name": "linnoinen" },
-  "plugins": [{ "name": "git-context", "source": "./git-context", "description": "Band above the prompt showing repo, branch, incoming/outgoing commits and a details panel." }]
+  "owner": {
+    "name": "linnoinen"
+  },
+  "plugins": [
+    {
+      "name": "git-context",
+      "source": "./git-context",
+      "description": "Band above the prompt showing repo, branch, incoming/outgoing commits and a details panel."
+    },
+    {
+      "name": "github-panel",
+      "source": "./github-panel",
+      "description": "Side panel for GitHub Actions runs and pull requests, with browser links and PR watching."
+    }
+  ]
 }
