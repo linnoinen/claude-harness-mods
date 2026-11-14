@@ -1,0 +1,1 @@
+{ "name": "agent-panel", "version": "0.1.0", "description": "Side panel listing the subagents working right now and what each is doing; click one for its task and recent tool calls, or to open its transcript.", "types": "./types/index.d.ts" }

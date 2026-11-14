@@ -13,6 +13,11 @@
       "name": "github-panel",
       "source": "./github-panel",
       "description": "Side panel for GitHub Actions runs and pull requests, with browser links and PR watching."
+    },
+    {
+      "name": "agent-panel",
+      "source": "./agent-panel",
+      "description": "Side panel listing running subagents and what each is doing; click one for its task log or transcript."
     }
   ]
 }
