@@ -1,0 +1,46 @@
+{
+  "name": "model-router",
+  "version": "0.1.0",
+  "description": "Smart model router: classifies each prompt and runs it on a fitting model and effort, with a Router log tab and a manual model/effort picker.",
+  "types": "./types/index.d.ts",
+  "userConfig": {
+    "classifier": {
+      "type": "string",
+      "title": "Classifier",
+      "description": "Who classifies prompts: haiku (alias, latest Haiku), claude-haiku-5-5 (pinned Haiku), jev (TypeSafe Jev), or openai / simple (your own endpoint, set the URL below).",
+      "default": "haiku",
+      "options": [
+        "haiku",
+        "claude-haiku-5-5",
+        "jev",
+        "openai",
+        "simple"
+      ]
+    },
+    "externalUrl": {
+      "type": "string",
+      "title": "External classifier URL",
+      "description": "Endpoint for jev (empty uses https://api.typesafe.ai/v1/systemone) or for the openai / simple classifiers.",
+      "default": ""
+    },
+    "externalModel": {
+      "type": "string",
+      "title": "External classifier model",
+      "description": "Model name sent to the external service (jev default jev-latest; openai format).",
+      "default": ""
+    },
+    "externalApiKey": {
+      "type": "string",
+      "title": "External classifier API key",
+      "description": "Sent as a Bearer token to the external endpoint. Leave empty to use the TYPESAFE_API_KEY environment variable.",
+      "default": "",
+      "sensitive": true
+    },
+    "externalMinConfidence": {
+      "type": "number",
+      "title": "Jev minimum confidence",
+      "description": "With format jev, an answer below this confidence (0-1) is not trusted and the Claude classifier decides instead. 0 trusts every answer.",
+      "default": 0
+    }
+  }
+}
