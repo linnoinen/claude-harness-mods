@@ -18,6 +18,11 @@
       "name": "agent-panel",
       "source": "./agent-panel",
       "description": "Side panel listing running subagents and what each is doing; click one for its task log or transcript."
+    },
+    {
+      "name": "model-router",
+      "source": "./model-router",
+      "description": "Routes each prompt to a fitting model and effort (Haiku or Jev classifier), with a Router log tab and a manual model/effort picker."
     }
   ]
 }
