@@ -64,6 +64,25 @@ const dur = (ms: number) => (ms < 1000 ? ms + 'ms' : ms < 60000 ? (ms / 1000).to
 const tok = (n: number) => (n >= 1000 ? (n / 1000).toFixed(1) + 'k' : String(n))
 const shortModel = (m: string) => (m === '' || m === 'default' ? 'default' : m.replace(/^claude-/, '').replace(/-\d.*$/, ''))
 
+// Turn the harness's tag-wrapped prompts (bash commands, slash commands, their
+// output) into readable text. Display only: the log keeps the raw prompt.
+function prettyPrompt(raw: string): string {
+  const tag = (name: string) => new RegExp('<' + name + '>([\\s\\S]*?)</' + name + '>', 'g')
+  let s = raw
+  s = s.replace(tag('local-command-caveat'), '')
+  s = s.replace(tag('system-reminder'), '')
+  s = s.replace(tag('bash-input'), (_m, c) => '$ ' + String(c).trim())
+  s = s.replace(tag('bash-stdout'), (_m, c) => String(c).trim() ? String(c).trimEnd() + '\n' : '')
+  s = s.replace(tag('bash-stderr'), (_m, c) => String(c).trim() ? 'stderr: ' + String(c).trimEnd() + '\n' : '')
+  s = s.replace(tag('local-command-stdout'), (_m, c) => String(c).trim() ? String(c).trimEnd() + '\n' : '')
+  s = s.replace(tag('local-command-stderr'), (_m, c) => String(c).trim() ? 'stderr: ' + String(c).trimEnd() + '\n' : '')
+  // slash command: <command-name>/x</command-name> <command-message>..</command-message> <command-args>a</command-args>
+  s = s.replace(tag('command-message'), '')
+  s = s.replace(tag('command-name'), (_m, c) => String(c).trim())
+  s = s.replace(tag('command-args'), (_m, c) => (String(c).trim() ? ' ' + String(c).trim() : ''))
+  return s.replace(/\n{3,}/g, '\n\n').trim()
+}
+
 function parseReply(text: string): { category: string; reason: string } | undefined {
   const m = /\{[\s\S]*\}/.exec(text)
   if (m) {
@@ -455,7 +474,9 @@ export const register: Register = (on, options) => {
           <Text bold>{statusMark(chosen.status)} {chosen.category || chosen.mode} → {shortModel(chosen.model || chosen.sessionModel)}</Text>
           <Text> </Text>
           <Text bold color="blue">PROMPT</Text>
-          <Text>{chosen.prompt ? clip(chosen.prompt, cols * 8) : '(no typed prompt: continuation)'}</Text>
+          {chosen.prompt
+            ? prettyPrompt(chosen.prompt).split('\n').slice(0, 40).map((ln, i) => <Text key={'p' + i}>{clip(ln, cols * 2) || ' '}</Text>)
+            : <Text>(no typed prompt: continuation)</Text>}
           <Text> </Text>
           <Text bold color="blue">DECISION</Text>
           <R k="mode" v={chosen.mode} color={modeColor(chosen.mode)} />
@@ -506,7 +527,7 @@ export const register: Register = (on, options) => {
               <Text> → {shortModel(x.model || x.sessionModel)}</Text>
               <Text dimColor>{x.effort ? ' · ' + x.effort : ''}</Text>
             </Button>
-            <Text dimColor>{'  ' + (x.prompt ? clip(x.prompt, cols - 4) : '(continuation)')}</Text>
+            <Text dimColor>{'  ' + (x.prompt ? clip(prettyPrompt(x.prompt) || x.prompt, cols - 4) : '(continuation)')}</Text>
           </Box>
         ))}
       </Box>
